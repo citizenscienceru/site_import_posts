@@ -79,8 +79,7 @@ export async function connect(): Promise<connectResult> {
 }
 
 export async function importPosts(): Promise<void> {
-  const directoryPath = "./drafts";
-  fs.readdir(directoryPath, function (err, files) {
+  fs.readdir(`${config.DRAFTS_PATH}`, function (err, files) {
     //handling error
     if (err) {
       return console.log("Unable to scan directory: " + err);
@@ -88,7 +87,7 @@ export async function importPosts(): Promise<void> {
     //listing all files using forEach
     files.forEach(function (file) {
       // Do whatever you want to do with the file
-      fs.readFile(`${directoryPath}/${file}`, "utf8", function (err, data) {
+      fs.readFile(`${config.DRAFTS_PATH}/${file}`, "utf8", async function (err, data) {
         if (err) throw err;
         // разбиваем данные на 3 порции
         const dataSplitted = data.split("---");
@@ -108,12 +107,27 @@ export async function importPosts(): Promise<void> {
           postInfoHash["content"] = dataSplitted[2];
           postInfoHash["path"] = file;
           // вставка
-          Projects.create(postInfoHash);
-          // перенос в чистовики
-          fs.rename("../" + directoryPath + "/" + file, "../source/_posts/", function (err) {
-            if (err) throw err;
-            console.log("Successfully renamed - AKA moved!");
+          // Projects.create(postInfoHash);
+          const [_project, created] = await Projects.findOrCreate({
+            where: {
+              title: postInfoHash.title,
+            },
           });
+
+          if (created) {
+            // перенос в чистовики
+            fs.rename(
+              `${config.DRAFTS_PATH}${file}`,
+              `${config.PUBLISH_PATH}${file}`,
+              function (err) {
+                if (err) throw err;
+                console.log("Successfully renamed - AKA moved!");
+                // TODO: post news about new project to twitter & telegram
+              }
+            );
+          } else {
+            console.log("! Already present");
+          }
         }
       });
     });

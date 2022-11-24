@@ -17,6 +17,9 @@ interface ENV {
   DB_PORT: string | undefined;
   DB_NAME: string | undefined;
   NODE_ENV: string | undefined;
+  SITE_PATH: string | undefined;
+  DRAFTS_PATH: string | undefined;
+  PUBLISH_PATH: string | undefined;
 }
 
 interface Config {
@@ -26,6 +29,9 @@ interface Config {
   DB_PORT: string | undefined;
   DB_NAME: string | undefined;
   NODE_ENV: string | undefined;
+  SITE_PATH: string | undefined;
+  DRAFTS_PATH: string | undefined;
+  PUBLISH_PATH: string | undefined;
 }
 
 // Loading process.env as ENV interface
@@ -38,6 +44,9 @@ const getConfig = (): ENV => {
     DB_HOST: process.env.DB_HOST,
     DB_NAME: process.env.DB_NAME,
     NODE_ENV: process.env.NODE_ENV,
+    SITE_PATH: process.env.SITE_PATH,
+    DRAFTS_PATH: process.env.DRAFTS_PATH,
+    PUBLISH_PATH: process.env.PUBLISH_PATH,
   };
 };
 
