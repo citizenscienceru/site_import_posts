@@ -91,27 +91,87 @@ export async function importPosts(): Promise<void> {
         if (err) throw err;
         // разбиваем данные на 3 порции
         const dataSplitted = data.split("---");
-        const postInfoHash: { [key: string]: string } = {};
+        // const postInfoHash: { [key: string]: string } = {};
+        type postInfoHashType = {
+          // [key: string?]: string | string[];
+          title: string;
+          description_short: string;
+          description: string;
+          small_logo: string;
+          logo: string;
+          trends: string[];
+          location: string[];
+          participation: string[];
+          url: string;
+          path: string;
+          content: string;
+        }; // = {};
+        const postInfoHash: postInfoHashType = {
+          title: "",
+          description_short: "",
+          description: "",
+          small_logo: "",
+          logo: "",
+          trends: [],
+          location: [],
+          participation: [],
+          url: "",
+          path: "",
+          content: "",
+        };
+        // const postInfoHash: { [key: string]: string } = {};
+
         if (dataSplitted[1]) {
           // данные поста. в [1] - свойства поста, [2] - текст
           // получаем свойства поста
           const postInfo = dataSplitted[1].split("\n");
-          postInfo.forEach((s) => {
+          postInfo.forEach((s: string | []) => {
             // s - одно свойство. Делим и вставляем в хэш
-            const tmp = s.split(": ");
-            tmp[0] = tmp[0].replace(/\s+/g, "");
-            if (tmp[0]) {
-              postInfoHash[tmp[0]] = tmp[1];
+            let tmp: string[];
+            if (typeof s === "string") {
+              tmp = s.split(": ");
+              if (tmp[0]) {
+                tmp[0] = tmp[0].replace(/\s+/g, "");
+                if (tmp[0] === "trends") {
+                  const tmp1 = tmp[1].split(", ");
+                  // console.log(tmp1);
+                  postInfoHash.trends = tmp1;
+                } else if (tmp[0] === "location") {
+                  const tmp1 = tmp[1].split(", ");
+                  postInfoHash.location = tmp1;
+                } else if (tmp[0] === "participation") {
+                  const tmp1 = tmp[1].split(", ");
+                  postInfoHash.participation = tmp1;
+                } else if (tmp[0] === "title") {
+                  postInfoHash.title = tmp[1];
+                } else if (tmp[0] === "description_short") {
+                  postInfoHash.description_short = tmp[1];
+                } else if (tmp[0] === "description") {
+                  postInfoHash.description = tmp[1];
+                } else if (tmp[0] === "small_logo") {
+                  postInfoHash.small_logo = tmp[1];
+                } else if (tmp[0] === "logo") {
+                  postInfoHash.logo = tmp[1];
+                } else if (tmp[0] === "url") {
+                  postInfoHash.url = tmp[1];
+                } else if (tmp[0] === "path") {
+                  postInfoHash.path = tmp[1];
+                }
+              }
             }
           });
           postInfoHash["content"] = dataSplitted[2];
           postInfoHash["path"] = file;
+
+          // console.log(postInfoHash);
+          // process.exit(0);
+
           // вставка
-          // Projects.create(postInfoHash);
           const [_project, created] = await Projects.findOrCreate({
             where: {
               title: postInfoHash.title,
             },
+            defaults: postInfoHash,
           });
 
           if (created) {
